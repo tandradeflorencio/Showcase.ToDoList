@@ -6,7 +6,7 @@ using Showcase.ToDoList.Infrastructure.Repositories.Interfaces;
 
 namespace Showcase.ToDoList.Configurations
 {
-    internal static class DependencyInjectionConfiguration
+    public static class DependencyInjectionConfiguration
     {
         public static IServiceCollection ConfigureDependencies(this IServiceCollection services)
         {
@@ -19,7 +19,7 @@ namespace Showcase.ToDoList.Configurations
             return services;
         }
 
-        public static void ConfigureLogs(this IServiceCollection services, ConfigurationManager configuration)
+        public static void ConfigureLogs(this IServiceCollection services, IConfiguration configuration)
         {
             Log.Logger = new LoggerConfiguration()
                             .ReadFrom.Configuration(configuration)

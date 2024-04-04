@@ -51,3 +51,5 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
 
     await dbContext.Database.MigrateAsync();
 }
+
+public partial class Program { }

@@ -9,7 +9,7 @@ namespace Showcase.ToDoList.Application.Services.Interfaces
 
         Task<BaseResponse> GetAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<ToDoListResponse> ListAsync(int pageSize, CancellationToken cancellationToken);
+        Task<ToDoListResponse> ListAsync(ListToDoRequest listToDoRequest, CancellationToken cancellationToken);
 
         Task<BaseResponse> UpdateAsync(Guid id, UpdateToDoRequest request, CancellationToken cancellationToken);
 

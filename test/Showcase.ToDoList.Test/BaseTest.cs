@@ -13,9 +13,9 @@ namespace Showcase.ToDoList.Test
     {
         protected readonly Fixture _fixture;
 
-        protected readonly IConfiguration _configuracao;
+        protected readonly IConfiguration _configuration;
 
-        protected readonly ILogger _logger;
+        protected readonly Serilog.ILogger _logger;
 
         protected readonly ITodoRepository _todoRepository;
         
@@ -26,7 +26,7 @@ namespace Showcase.ToDoList.Test
         public BaseTest()
         {
             _fixture = new Fixture();
-            _configuracao = new ConfigurationBuilder()
+            _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
@@ -35,7 +35,7 @@ namespace Showcase.ToDoList.Test
             _toDoService = Substitute.For<IToDoService>();
             _unitOfWork = Substitute.For<IUnitOfWork>();
 
-            _logger = Substitute.For<ILogger>();
+            _logger = Substitute.For<Serilog.ILogger>();
         }
     }
 }

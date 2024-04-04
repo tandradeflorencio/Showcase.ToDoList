@@ -4,6 +4,7 @@ using Showcase.ToDoList.Domain.Models.Entities;
 using Showcase.ToDoList.Domain.Models.Requests;
 using Showcase.ToDoList.Domain.Models.Responses;
 using Showcase.ToDoList.Infrastructure.Repositories.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace Showcase.ToDoList.Application.Services
@@ -14,12 +15,14 @@ namespace Showcase.ToDoList.Application.Services
         {
             logger.Information($"{nameof(ToDoService)} {nameof(CreateAsync)} - Received a new request ({JsonSerializer.Serialize(request)})");
 
-            if (request is null || string.IsNullOrWhiteSpace(request.Title))
+            var validationMessage = ValidateRequest(request);
+
+            if (!string.IsNullOrWhiteSpace(validationMessage))
                 return new BaseResponse
                 {
                     Code = StatusCodes.Status400BadRequest,
-                    Message = $"Invalid {nameof(CreateToDoRequest.Title)}"
-                };
+                    Message = validationMessage
+                };            
 
             var todo = request.Adapt<ToDo>();
 
@@ -33,7 +36,7 @@ namespace Showcase.ToDoList.Application.Services
 
             return response;
         }
-
+        
         public async Task<BaseResponse> DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
             logger.Information($"{nameof(ToDoService)} {nameof(DeleteAsync)} - ({id}) Received a new request.");
@@ -78,12 +81,16 @@ namespace Showcase.ToDoList.Application.Services
             return response;
         }
 
-        public async Task<ToDoListResponse> ListAsync(int pageSize, CancellationToken cancellationToken)
+        public async Task<ToDoListResponse> ListAsync(ListToDoRequest listToDoRequest, CancellationToken cancellationToken)
         {
-            logger.Information($"{nameof(ToDoService)} {nameof(ListAsync)} - ({pageSize}) Received a new request.");
+            logger.Information($"{nameof(ToDoService)} {nameof(ListAsync)} - ({listToDoRequest?.PageSize}) Received a new request.");
 
-            if (pageSize < 1)
-                pageSize = int.MaxValue;
+            const int DefaultPageSize = 10;
+
+            var pageSize = DefaultPageSize;
+
+            if(listToDoRequest is { } &&  listToDoRequest.PageSize > 0)
+                pageSize = listToDoRequest.PageSize.Value;
 
             var toDos = await todoRepository.ListAsync(pageSize, cancellationToken);
 
@@ -104,11 +111,13 @@ namespace Showcase.ToDoList.Application.Services
         {
             logger.Information($"{nameof(ToDoService)} {nameof(UpdateToDoRequest)} - ({id}) Received a new request ({JsonSerializer.Serialize(request)}).");
 
-            if (request is null || string.IsNullOrWhiteSpace(request.Title))
+            var validationMessage = ValidateRequest(request);
+
+            if (!string.IsNullOrWhiteSpace(validationMessage))
                 return new BaseResponse
                 {
                     Code = StatusCodes.Status400BadRequest,
-                    Message = $"Invalid {nameof(UpdateToDoRequest.Title)}"
+                    Message = validationMessage
                 };
 
             var todo = await todoRepository.GetAsync(id, cancellationToken);
@@ -120,7 +129,7 @@ namespace Showcase.ToDoList.Application.Services
                     Message = $"ToDo with ID {id} was not found."
                 };
 
-            todo.Title = request.Title;
+            todo.Title = request.Title!;
             todo.Completed = request.Completed;
 
             await todoRepository.UpdateAsync(todo, cancellationToken);
@@ -132,6 +141,19 @@ namespace Showcase.ToDoList.Application.Services
             response.Code = StatusCodes.Status200OK;
 
             return response;
+        }
+
+        private static string? ValidateRequest<T>(T request)
+        {            
+            if (request is null)
+                return "Invalid request.";
+
+            var validationResults = new List<ValidationResult>();
+
+            if (!Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true))
+                return validationResults[0]?.ErrorMessage;
+
+            return string.Empty;
         }
     }
 }
