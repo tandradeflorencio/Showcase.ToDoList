@@ -10,9 +10,13 @@ services:
     ports:
      - "8080:8080"
      - "8081:8081"
+    depends_on:
+      showcase.database:
+        condition: service_healthy
   showcase.database:
-    image: postgres:16.2
-    container_name: showcase.database
+    image: postgres:16.2-alpine
+    restart: always
+    container_name: showcase.database    
     environment:
      - POSTGRES_DB=Showcase
      - POSTGRES_USER=postgres
@@ -21,6 +25,10 @@ services:
      - ./.containers/showcase-database:/var/lib/postgresql/data
     ports:
      - 5432:5432
-
+    healthcheck:
+      test: ["CMD", "pg_isready -d Showcase -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 
